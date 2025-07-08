@@ -12,18 +12,6 @@ This experiment is built on top of the [FLEXible](https://github.com/FLEXible-FL
 
 This project is built using Python and the Conda package management system. To set up the environment on your local machine, ensure that you have Conda installed.
 
-## Clone the Repository
-
-First, clone this repository to your local machine:
-```bash
-git clone https://github.com/ari-dasci/S-SBRO-FL.git
-```
-## 	Download and Create Conda Environment
-
-The environment for this project is defined in the [environment.yml](https://github.com/Qinjun-Fei/SBRO-FL/blob/main/environment.yml) file. To create a new Conda environment from this file, run the following command:
-```bash
-conda env create -f environment.yml
-```
 ## Project Structure
 
 - **[experiment.py](experiments/experiment.py)**: This is the entry point for running the experiments. It contains the experiment parameters and path settings needed to configure and run the experiments.
