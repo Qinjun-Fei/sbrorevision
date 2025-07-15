@@ -115,7 +115,7 @@ def shakespeare(out_dir: str = ".", include_actors=False):
     return Dataset.from_array(train_x, train_y), Dataset.from_array(test_x, test_y)
 
 
-def emnist_letters(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None):
+def emnist_letters(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None, return_train_unused = False):
     from scipy.io import loadmat
     url, filename, md5 = (
         utils.EMNIST_LETTERS_URL,
@@ -143,6 +143,7 @@ def emnist_letters(out_dir: str = ".", training_size = 10000, validation_size = 
     sampled_train_data = train_data[:training_size]
     sampled_train_labels = train_labels[:training_size]
 
+
     test_data, test_labels = shuffle(test_data, test_labels)
 
     val_data, val_labels = test_data[:validation_size], test_labels[:validation_size]
@@ -155,6 +156,7 @@ def emnist_letters(out_dir: str = ".", training_size = 10000, validation_size = 
 
     # Apply transform to the data
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+
     sampled_train_data = np.array([transform(img) for img in sampled_train_data])
     val_data = np.array([transform(img) for img in val_data])
     test_data = np.array([transform(img) for img in test_data])
@@ -162,15 +164,23 @@ def emnist_letters(out_dir: str = ".", training_size = 10000, validation_size = 
     train_data_object = Dataset.from_array(sampled_train_data, sampled_train_labels)
     test_data_object = Dataset.from_array(test_data, test_labels)
     val_data_object = Dataset.from_array(val_data, val_labels)
-    return train_data_object, test_data_object, val_data_object
 
-def cifar10(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None):
+    if return_train_unused:
+        unused_train_data = train_data[training_size:]
+        unused_train_labels = train_labels[training_size:]
+        unused_train_data = np.array([transform(img) for img in unused_train_data])
+        unused_train_object = Dataset.from_array(unused_train_data, unused_train_labels)
+        return train_data_object, test_data_object, val_data_object, unused_train_object
+    else:
+        return train_data_object, test_data_object, val_data_object
+
+def cifar10(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None,return_train_unused = False):
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     train_dataset = datasets.CIFAR10(out_dir, train=True, download=True,transform=transform)
     test_dataset = datasets.CIFAR10(out_dir, train=False, download=True,transform=transform)
 
     if training_size is not None:
-        train_dataset = random_split(train_dataset, [training_size, len(train_dataset) - training_size])[0]
+        train_dataset, unused_dataset = random_split(train_dataset, [training_size, len(train_dataset) - training_size])
     if test_size is None:
         val_dataset, test_dataset = random_split(test_dataset, [validation_size, len(test_dataset) - validation_size])
     else:
@@ -178,14 +188,18 @@ def cifar10(out_dir: str = ".", training_size = 10000, validation_size = 2000, t
     train_data_object = Dataset.from_torchvision_dataset(train_dataset)
     test_data_object = Dataset.from_torchvision_dataset(test_dataset)
     val_data_object = Dataset.from_torchvision_dataset(val_dataset)
-    return train_data_object, test_data_object, val_data_object
+    if return_train_unused:
+        unused_data_object = Dataset.from_torchvision_dataset(unused_dataset)
+        return train_data_object, test_data_object, val_data_object, unused_data_object
+    else:
+        return train_data_object, test_data_object, val_data_object
 
-def svhn(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None):
+def svhn(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None, return_train_unused = False):
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     train_dataset = datasets.SVHN(out_dir, split="train", download=True, transform=transform)
     test_dataset = datasets.SVHN(out_dir, split="test", download=True, transform=transform)
     if training_size is not None:
-        train_dataset = random_split(train_dataset, [training_size, len(train_dataset) - training_size])[0]
+        train_dataset, unused_dataset = random_split(train_dataset, [training_size, len(train_dataset) - training_size])
     if test_size is None:
         val_dataset, test_dataset = random_split(test_dataset, [validation_size, len(test_dataset) - validation_size])
     else:
@@ -193,14 +207,18 @@ def svhn(out_dir: str = ".", training_size = 10000, validation_size = 2000, test
     train_data_object = Dataset.from_torchvision_dataset(train_dataset)
     test_data_object = Dataset.from_torchvision_dataset(test_dataset)
     val_data_object = Dataset.from_torchvision_dataset(val_dataset)
-    return train_data_object, test_data_object, val_data_object
+    if return_train_unused:
+        unused_data_object = Dataset.from_torchvision_dataset(unused_dataset)
+        return train_data_object, test_data_object, val_data_object, unused_data_object
+    else:
+        return train_data_object, test_data_object, val_data_object
 
-def fashionmnist(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None):
+def fashionmnist(out_dir: str = ".", training_size = 10000, validation_size = 2000, test_size = None, return_train_unused = False):
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
     train_dataset = datasets.FashionMNIST(out_dir, train=True, download=True, transform=transform)
     test_dataset = datasets.FashionMNIST(out_dir, train=False, download=True, transform=transform)
     if training_size is not None:
-        train_dataset = random_split(train_dataset, [training_size, len(train_dataset) - training_size])[0]
+        train_dataset, unused_dataset = random_split(train_dataset, [training_size, len(train_dataset) - training_size])
     if test_size is None:
         val_dataset, test_dataset = random_split(test_dataset, [validation_size, len(test_dataset) - validation_size])
     else:
@@ -208,4 +226,8 @@ def fashionmnist(out_dir: str = ".", training_size = 10000, validation_size = 20
     train_data_object = Dataset.from_torchvision_dataset(train_dataset)
     test_data_object = Dataset.from_torchvision_dataset(test_dataset)
     val_data_object = Dataset.from_torchvision_dataset(val_dataset)
-    return train_data_object, test_data_object, val_data_object
+    if return_train_unused:
+        unused_data_object = Dataset.from_torchvision_dataset(unused_dataset)
+        return train_data_object, test_data_object, val_data_object, unused_data_object
+    else:
+        return train_data_object, test_data_object, val_data_object
